@@ -55,6 +55,12 @@ class AppTheme {
     height: 1.5,
   );
 
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
+  );
+
   static const TextStyle labelSmall = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,

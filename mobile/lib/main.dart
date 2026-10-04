@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'core/theme.dart';
 import 'services/storage_service.dart';
 import 'screens/login_screen.dart';
@@ -79,6 +80,3 @@ class B2BApp extends ConsumerWidget {
     );
   }
 }
-
-// Note: Add go_router to pubspec.yaml dependencies:
-// go_router: ^13.0.0

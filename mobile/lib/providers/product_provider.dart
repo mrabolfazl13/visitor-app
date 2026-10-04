@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
+import 'auth_provider.dart';
 
 final productProvider = StateNotifierProvider<ProductNotifier, AsyncValue<List<ProductModel>>>((ref) {
   return ProductNotifier(ref.watch(apiServiceProvider));
