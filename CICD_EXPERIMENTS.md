@@ -118,4 +118,30 @@ Fix: analyze step → `flutter analyze --no-pub --no-fatal-infos` (errors+warnin
 Conclusion: correct flag is `--no-fatal-infos` (round-1 `--fatal-infos=false` was invalid syntax).
 Android job still has NOT reached the Gradle/APK stage — that is validated in Round 3.
 
+## CI Round 3 — run 37223417342
+Jobs: `frontend-web` ✅ · `ios` ✅ · `tauri-linux` ✅ (AppImage + deb) · `tauri-windows` ✅ (MSI + NSIS) · `android` ❌
+Milestone: `--no-fatal-infos` fix WORKED — Android passed Analyze and reached the Gradle stage
+(`Build release APK`) for the FIRST time. 4/5 jobs fully green with verified+uploaded artifacts.
+
+### Experiment #10 — Android `Build release APK` failed (connectivity_plus compileSdk)
+Platform: Android (CI, ubuntu-latest) — Gradle ran 5m21s then failed.
+Evidence (real runner log): `Execution failed for task ':connectivity_plus:checkReleaseAarMetadata'`
+→ "15 issues were found when checking AAR metadata". Every issue: an androidx dependency
+(fragment 1.7.1, window 1.2.0, window-java 1.2.0, activity 1.8.1, lifecycle-* 2.7.0, …)
+"requires libraries that depend on it to compile against version 34 or later", but
+":connectivity_plus is currently compiled against android-33".
+Root cause: `connectivity_plus 5.0.2` pins `compileSdk 33` in its own android/build.gradle, while
+its transitive androidx deps require compileSdk ≥ 34. Isolated to connectivity_plus (all 15 issues
+are its deps). NOT an app-code or AGP-version conflict.
+Verification: package is declared in pubspec but UNUSED anywhere in lib/ or test/ (grep clean) →
+a major bump has zero app-code impact. Inspected archives from the mirror:
+connectivity_plus 6.1.5 android/build.gradle = `compileSdk 34` (satisfies the androidx requirement).
+Fix: bumped `connectivity_plus: ^5.0.2 → ^6.1.5` in mobile/pubspec.yaml; `flutter pub get`
+regenerated pubspec.lock (connectivity_plus 5.0.2→6.1.5, connectivity_plus_platform_interface
+1.2.4→2.1.0). `flutter analyze --no-pub --no-fatal-infos` → exit 0 (21 infos, 0 errors/warnings).
+Chose the bump over a root-gradle reflection compileSdk override: the override would need to
+survive AGP 9.1.0 DSL changes and risk downgrading `:app` (36→34); the bump is surgical, keeps the
+dependency (Phase 24 — no feature/plugin removed), and is verifiable from the package source.
+Conclusion: Round 4 validates the Gradle/APK/AAB stage end-to-end.
+
 

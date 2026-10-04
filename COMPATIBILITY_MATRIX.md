@@ -37,5 +37,5 @@ Verified from Flutter 3.47.2 template (`mobile/android/*.gradle.kts`) + the SDK'
 - gradle.properties jvmargs: `-Xmx4G` (lowered from template's 8G for runner memory safety)
 - Legacy-plugin note: `connectivity_plus` pins AGP 8.1.2 in its own buildscript — resolves
   fine on CI (clean google()); it was the local sanctioned-network blocker, not a config defect.
-- Key deps: flutter_riverpod ^2.4.9, go_router ^13.0.0, dio ^5.4.0, drift ^2.14.0, sqlite3_flutter_libs ^0.5.18, shared_preferences ^2.2.2, cached_network_image ^3.3.0, connectivity_plus ^5.0.2, intl ^0.20.3
+- Key deps: flutter_riverpod ^2.4.9, go_router ^13.0.0, dio ^5.4.0, drift ^2.14.0, sqlite3_flutter_libs ^0.5.18, shared_preferences ^2.2.2, cached_network_image ^3.3.0, connectivity_plus ^6.1.5 (bumped from ^5.0.2 — 5.x pins compileSdk 33, which fails checkReleaseAarMetadata against androidx deps needing 34; 6.1.5 uses compileSdk 34), intl ^0.20.3
 
