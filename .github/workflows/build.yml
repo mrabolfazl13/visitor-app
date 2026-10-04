@@ -79,8 +79,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze (errors and warnings are fatal)
-        run: flutter analyze --no-pub
+      - name: Analyze (errors and warnings fatal, infos allowed)
+        run: flutter analyze --no-pub --no-fatal-infos
 
       - name: Build release APK
         run: flutter build apk --release

@@ -105,8 +105,17 @@ Fix: set `wix.language` to `en-US`. App UI stays Persian/RTL; only the Windows i
 language changes (Persian installer was never supported by WiX). Non-destructive (Phase 24).
 Note: Tauri Linux succeeded because AppImage/deb don't use WiX.
 
-## CI Round 2 — pending
-Pushed fixes: #07 (analyze flag) + #08 (wix language). Watching: does the Android **Gradle/APK**
-stage succeed on CI? Watch for an AGP version conflict (app AGP 9.1.0 vs connectivity_plus buildscript
-AGP 8.1.2). If it fails, apply single-AGP unification (resolutionStrategy) or bump connectivity_plus.
+## CI Round 2 — run 37222341303
+Jobs: `frontend-web` ✅ · `ios` ✅ · `tauri-linux` ✅ · `android` ❌ · `tauri-windows` (pending)
+
+### Experiment #09 — Android analyze STILL failed (fatal-infos default)
+Platform: Android (CI)
+Evidence (real runner log): step ran `flutter analyze --no-pub` (round-1 bad flag removed),
+printed "21 issues found" (all info-level deprecations) → `Process completed with exit code 1`.
+Root cause: Flutter 3.47.2 `flutter analyze` treats **infos as fatal by default**. Verified locally:
+`flutter analyze --no-pub` → exit 1; `flutter analyze --no-pub --no-fatal-infos` → exit 0.
+Fix: analyze step → `flutter analyze --no-pub --no-fatal-infos` (errors+warnings stay fatal).
+Conclusion: correct flag is `--no-fatal-infos` (round-1 `--fatal-infos=false` was invalid syntax).
+Android job still has NOT reached the Gradle/APK stage — that is validated in Round 3.
+
 
