@@ -2,6 +2,10 @@
 
 GitHub Actions pipeline for the B2B Sales Platform.
 
+> **Status: ✅ ALL GREEN** — run [37233441499](https://github.com/mrabolfazl13/visitor-app/actions/runs/37233441499)
+> (commit `4a2d327`, branch `master`): 5/5 jobs `success`, 6/6 artifacts verified + uploaded.
+> Iteration history: `CICD_EXPERIMENTS.md` #01–#10.
+
 Workflow: `.github/workflows/build.yml`
 Triggers: `push` / `pull_request` on `master`/`main`, plus `workflow_dispatch`.
 
@@ -60,8 +64,8 @@ version/tag policy are decided.
 
 | Concern | Local (this machine) | GitHub runner |
 |---------|----------------------|---------------|
-| pub.dev | blocked (403) → China mirror | open |
-| Maven/Google | mirrors as fallback | official `google()` first |
+| pub.dev | blocked (403) → China mirror (env vars only) | open |
+| Maven/Google | `google()` + `mavenCentral()` (template, no mirrors) | official `google()` first |
 | NDK 28.2 (Flutter default) | not installed, download blocked | auto-downloaded |
 | Rust release build | OOM (rustc killed) | builds normally |
 

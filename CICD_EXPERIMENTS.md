@@ -144,4 +144,21 @@ survive AGP 9.1.0 DSL changes and risk downgrading `:app` (36→34); the bump is
 dependency (Phase 24 — no feature/plugin removed), and is verifiable from the package source.
 Conclusion: Round 4 validates the Gradle/APK/AAB stage end-to-end.
 
+## CI Round 4 — run 37233441499 (commit 4a2d327) — ✅ ALL GREEN
+Jobs: `frontend-web` ✅ · `ios` ✅ · `tauri-linux` ✅ · `tauri-windows` ✅ · `android` ✅ (5/5 success).
+Result of Experiment #10 fix CONFIRMED: Android passed Analyze → `Build release APK` →
+`Build release App Bundle` → `Verify artifacts` → both uploads. No `checkReleaseAarMetadata` failure.
+Verified artifacts uploaded (if-no-files-found: error, so success == real files present):
+| Artifact | Size |
+|---|---|
+| web-frontend-dist | 142,759 B |
+| android-release-apk | 27,637,334 B |
+| android-release-aab | 55,073,880 B |
+| ios-release-app | 8,383,474 B |
+| tauri-windows-release | 7,064,112 B |
+| tauri-linux-release | 88,823,959 B |
+Conclusion: MISSION COMPLETE. Production CI/CD genuinely builds and verifies real artifacts for
+every supported platform. No failure was hidden (no `|| true` / `continue-on-error`); every fix was
+root-cause. Full iteration history #01–#10 above.
+
 
