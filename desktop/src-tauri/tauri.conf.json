@@ -38,7 +38,7 @@
     ],
     "windows": {
       "wix": {
-        "language": "fa-IR"
+        "language": "en-US"
       },
       "nsis": {
         "installerIcon": "icons/icon.ico"

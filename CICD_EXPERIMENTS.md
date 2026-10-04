@@ -83,8 +83,30 @@ still deferred to CI runners (local rustc release OOMs per env memory).
 
 ---
 
-## Deferred to CI (authoritative environment — clean network + clean SDK + RAM)
-- Android release APK/AAB (local blocked: dl.google.com + corrupt local SDK).
-- iOS unsigned release build.
-- Tauri Windows MSI/NSIS, Tauri Linux AppImage/deb (local rustc release OOM).
-Next: commit → first push to origin (repo empty) → trigger Actions → read real runner logs → iterate.
+## CI Round 1 — run 37221299078 (first push, branch master)
+Jobs: `frontend-web` ✅ · `ios` ✅ · `tauri-linux` ✅ (AppImage + deb) · `android` ❌ · `tauri-windows` ❌
+
+### Experiment #07 — Android `Analyze` step failed
+Platform: Android (CI, ubuntu-latest)
+Hypothesis: The analyze gate uses an invalid boolean-flag syntax.
+Evidence: failed step #7 "Analyze (errors are fatal)"; locally `flutter analyze --no-pub` passed with only infos.
+Root cause: workflow ran `flutter analyze --no-pub --fatal-infos=false`. Flutter uses package:args;
+boolean flags are `--fatal-infos` / `--no-fatal-infos`, NOT `--fatal-infos=false` → usage error → non-zero exit.
+Fix: changed step to `flutter analyze --no-pub` (default fatal-warnings=true, fatal-infos=false → infos don't fail).
+Conclusion: CI-only syntax bug, not a code defect. (Gradle/APK stage was never reached.)
+
+### Experiment #08 — Tauri Windows `Build Tauri app` failed (WiX culture)
+Platform: Tauri Windows (CI, windows-latest)
+Evidence (real runner log): Rust release binary compiled fine; failure at MSI packaging —
+`thread panicked at tauri-bundler/src/bundle/windows/msi/mod.rs:836: Language fa-IR not found.
+It must be one of ... en-US, ar-SA, he-IL, tr-TR ...` (WiX supports a fixed culture list; Persian is absent).
+Root cause: `tauri.conf.json` → `bundle.windows.wix.language: "fa-IR"` is not a valid WiX culture.
+Fix: set `wix.language` to `en-US`. App UI stays Persian/RTL; only the Windows installer wizard
+language changes (Persian installer was never supported by WiX). Non-destructive (Phase 24).
+Note: Tauri Linux succeeded because AppImage/deb don't use WiX.
+
+## CI Round 2 — pending
+Pushed fixes: #07 (analyze flag) + #08 (wix language). Watching: does the Android **Gradle/APK**
+stage succeed on CI? Watch for an AGP version conflict (app AGP 9.1.0 vs connectivity_plus buildscript
+AGP 8.1.2). If it fails, apply single-AGP unification (resolutionStrategy) or bump connectivity_plus.
+
