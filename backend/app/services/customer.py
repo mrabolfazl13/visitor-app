@@ -124,7 +124,9 @@ async def create_customer(session: AsyncSession, customer_data: CustomerCreate, 
         session.add(address)
 
     await session.flush()
-    return customer
+    # Reload so `addresses` is eager-loaded; the response model reads it after the
+    # session has committed, where an implicit load would raise MissingGreenlet.
+    return await get_customer(session, str(customer.id), owner)
 
 
 async def update_customer(session: AsyncSession, customer_id: str, customer_data: CustomerUpdate, current_user: User) -> Customer:
@@ -136,7 +138,8 @@ async def update_customer(session: AsyncSession, customer_id: str, customer_data
         setattr(customer, field, value)
 
     await session.flush()
-    return customer
+    # Server-side `onupdate=now()` expires updated_at, so re-read the row.
+    return await get_customer(session, customer_id, current_user)
 
 
 async def delete_customer(session: AsyncSession, customer_id: str, current_user: User) -> bool:

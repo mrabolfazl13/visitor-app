@@ -1,30 +1,36 @@
-from fastapi import Depends, HTTPException, status
+from uuid import UUID
+
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User
 
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False
+)
+
 
 async def get_current_user(
-    token: str = None,  # Will be extracted from Authorization header by FastAPI security
+    bearer_token: str | None = Security(oauth2_scheme),
+    token: str | None = None,  # Legacy fallback for clients that cannot set headers
     session: AsyncSession = Depends(get_db),
 ) -> User:
-    """Get current authenticated user from JWT token."""
-    # This is a simplified version - in production, use OAuth2PasswordBearer
-    if not token:
+    """Get current authenticated user from the bearer JWT."""
+    raw_token = bearer_token or token
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Remove "Bearer " prefix if present
-    if token.startswith("Bearer "):
-        token = token[7:]
-
-    payload = decode_token(token)
+    payload = decode_token(raw_token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,8 +46,23 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    try:
+        user_uuid = UUID(str(user_id))
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     result = await session.execute(
-        select(User).where(User.id == user_id, User.is_active == True, User.deleted_at.is_(None))
+        select(User)
+        .options(selectinload(User.roles))
+        .where(
+            User.id == user_uuid,
+            User.is_active == True,
+            User.deleted_at.is_(None),
+        )
     )
     user = result.scalar_one_or_none()
 

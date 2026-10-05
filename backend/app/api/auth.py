@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
-from app.schemas.auth import LoginRequest, TokenResponse, RefreshTokenRequest, ChangePasswordRequest
+from app.schemas.auth import LoginRequest, RefreshTokenRequest, ChangePasswordRequest
+from app.schemas.user import UserResponse
 from app.services import auth as auth_service
 from app.models.user import User
-from app.core.security import decode_token
-from sqlalchemy import select
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -15,6 +15,20 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def login(request: LoginRequest, session: AsyncSession = Depends(get_db)):
     """Login with email and password."""
     return await auth_service.login(session, request.email, request.password)
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_me(current_user: User = Depends(get_current_user)):
+    """Return the authenticated user, used to restore a session on startup."""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        mobile=current_user.mobile,
+        is_active=current_user.is_active,
+        roles=current_user.role_names,
+    )
 
 
 @router.post("/refresh", response_model=dict)
@@ -33,16 +47,11 @@ async def logout():
 async def change_password(
     request: ChangePasswordRequest,
     session: AsyncSession = Depends(get_db),
-    current_user_id: str = None,  # Will be set by dependency
+    current_user: User = Depends(get_current_user),
 ):
-    """Change user password."""
-    # Get current user from token
-    result = await session.execute(select(User).where(User.id == current_user_id))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    await auth_service.change_password(session, user, request.current_password, request.new_password)
+    """Change the authenticated user's password."""
+    await auth_service.change_password(
+        session, current_user, request.current_password, request.new_password
+    )
 
     return {"success": True, "message": "Password changed successfully"}

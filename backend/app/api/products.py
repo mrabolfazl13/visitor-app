@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.core.database import get_db
 from app.models.user import User
+from app.schemas.common import Page
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from app.services import product as product_service
 from app.api.deps import get_current_user, require_role
@@ -11,7 +12,7 @@ from app.api.deps import get_current_user, require_role
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=Page[ProductResponse])
 async def list_products(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),

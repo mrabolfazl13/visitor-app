@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 
 from app.models.user import User
@@ -11,8 +12,12 @@ from app.core.config import settings
 
 async def authenticate_user(session: AsyncSession, email: str, password: str) -> Optional[User]:
     """Authenticate user with email and password."""
+    # Roles are eager-loaded because login reads user.role_names after the session
+    # has committed, where an implicit lazy load would raise MissingGreenlet.
     result = await session.execute(
-        select(User).where(User.email == email, User.deleted_at.is_(None))
+        select(User)
+        .options(selectinload(User.roles))
+        .where(User.email == email, User.deleted_at.is_(None))
     )
     user = result.scalar_one_or_none()
 

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api import auth, products, customers
+from app.api import auth, products, customers, categories
 
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(products.router, prefix=settings.API_V1_PREFIX)
 app.include_router(customers.router, prefix=settings.API_V1_PREFIX)
+app.include_router(categories.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

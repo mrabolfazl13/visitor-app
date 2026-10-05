@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.core.database import get_db
 from app.models.user import User
+from app.schemas.common import Page
 from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
 from app.services import customer as customer_service
 from app.api.deps import get_current_user
@@ -11,7 +12,7 @@ from app.api.deps import get_current_user
 router = APIRouter(prefix="/customers", tags=["Customers"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=Page[CustomerResponse])
 async def list_customers(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),

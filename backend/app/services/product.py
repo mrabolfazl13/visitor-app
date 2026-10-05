@@ -107,7 +107,9 @@ async def create_product(session: AsyncSession, product_data: ProductCreate, cre
     session.add(product)
     await session.flush()
 
-    return product
+    # Reload so `images` is eager-loaded; the response model reads it after the
+    # session has committed, where an implicit load would raise MissingGreenlet.
+    return await get_product(session, str(product.id))
 
 
 async def update_product(session: AsyncSession, product_id: str, product_data: ProductUpdate) -> Product:
@@ -119,7 +121,8 @@ async def update_product(session: AsyncSession, product_id: str, product_data: P
         setattr(product, field, value)
 
     await session.flush()
-    return product
+    # Server-side `onupdate=now()` expires updated_at, so re-read the row.
+    return await get_product(session, product_id)
 
 
 async def delete_product(session: AsyncSession, product_id: str) -> bool:
