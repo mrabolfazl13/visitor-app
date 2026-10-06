@@ -1,22 +1,52 @@
-function App() {
+import { useEffect } from 'react';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AppShell } from './components/AppShell';
+import { CommandPalette } from './components/CommandPalette';
+import { Toasts } from './components/Toasts';
+import { LoginPage } from './features/auth/LoginPage';
+import { ProfilePage } from './features/auth/ProfilePage';
+import { DashboardPage } from './features/dashboard/DashboardPage';
+import { ProductsPage } from './features/products/ProductsPage';
+import { CustomersPage } from './features/customers/CustomersPage';
+import { useAuthStore } from './stores/auth';
+
+function Splash() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            B2B Sales Platform - Desktop
-          </h1>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <p className="text-gray-500 text-xl">Desktop application connected to backend API</p>
-          </div>
-        </div>
-      </main>
+    <div className="splash">
+      <span className="brand-mark">B2B</span>
+      <span className="spinner" aria-hidden="true" />
+      <p>در حال برقراری اتصال به سرور…</p>
     </div>
-  )
+  );
 }
 
-export default App
+export default function App() {
+  const status = useAuthStore((state) => state.status);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
+
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+
+  if (status === 'booting') return <Splash />;
+
+  return (
+    <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        <Route
+          path="/login"
+          element={status === 'authenticated' ? <Navigate to="/" replace /> : <LoginPage />}
+        />
+        <Route element={status === 'authenticated' ? <AppShell /> : <Navigate to="/login" replace />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <CommandPalette />
+      <Toasts />
+    </HashRouter>
+  );
+}

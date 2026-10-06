@@ -10,8 +10,17 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    host: "127.0.0.1",
+    port: 3100,
     strictPort: true,
+    // Browser-only dev path: the Tauri build calls the API through the Rust
+    // `api_request` command instead, so no proxy is involved there.
+    proxy: {
+      '/api': {
+        target: process.env.B2B_API_PROXY ?? 'https://visitor.absadeghi.ir',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',
