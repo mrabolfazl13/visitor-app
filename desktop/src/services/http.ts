@@ -160,7 +160,7 @@ async function tryRefresh(): Promise<boolean> {
   if (!refresh) return false;
   const base = await getBaseUrl();
   try {
-    const result = await send(`${base}/auth/refresh`, 'POST', [['Content-Type', 'application/json']], JSON.stringify({ refresh_token: refresh }), 15_000);
+    const result = await send(joinBase(base, '/auth/refresh'), 'POST', [['Content-Type', 'application/json']], JSON.stringify({ refresh_token: refresh }), 15_000);
     if (result.status !== 200) return false;
     const data = JSON.parse(result.body) as { access_token: string };
     accessToken = data.access_token;
