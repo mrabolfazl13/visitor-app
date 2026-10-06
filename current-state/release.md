@@ -1,5 +1,27 @@
 # Release Current State
 
+## Published
+- ✅ GitHub Release **v0.1.0** (prerelease) at
+  <https://github.com/mrabolfazl13/visitor-app/releases/tag/v0.1.0> (prerelease, 1 release / 1 tag total), tagged on commit
+  `3fedd39` and fed entirely by CI run `37426869056` (5/5 jobs green). Artifact generation in
+  Actions and publication by this script are deliberately two separate steps.
+- Eight public assets:
+
+  | Asset | Bytes |
+  | --- | --- |
+  | `windows-B2B_Sales_Platform_0.1.0_x64_en-US.msi` | 6 156 288 |
+  | `windows-B2B_Sales_Platform_0.1.0_x64-setup.exe` | 4 356 144 |
+  | `linux-B2B_Sales_Platform_0.1.0_amd64.AppImage` | 86 051 320 |
+  | `linux-B2B_Sales_Platform_0.1.0_amd64.deb` | 7 685 800 |
+  | `android-app-release.apk` (`versionName 0.1.0+1`) | 58 897 197 |
+  | `android-app-release.aab` | 55 389 453 |
+  | `ios-unsigned-Runner.app.zip` (unsigned, review only) | 8 418 086 |
+  | `web-frontend-dist.zip` | 372 212 |
+
+- ✅ Client versions unified on `0.1.0` (`desktop/package.json`, `desktop/package-lock.json`,
+  `desktop/src-tauri/tauri.conf.json`, `desktop/src-tauri/Cargo.toml`, `mobile/pubspec.yaml`).
+  `1.0.0` would have claimed the AGENTS.md VERSION 1 milestone, which the backend does not meet.
+
 ## Completed
 - ✅ Docker Compose stack for postgres, redis, backend, celery worker/beat and MinIO;
   `.env.example` present, real `.env` gitignored.
@@ -20,19 +42,29 @@
 - 🔄 Nothing.
 
 ## Blocked
-- No Git tag and no GitHub Release exists yet (`releases: 0`, `tags: []`), so nothing is
-  downloadable by a user. Artifact generation is deliberately kept separate from publication.
 - The Windows build is unsigned, so SmartScreen will warn on first launch.
-- A release is not meaningful until the production backend is redeployed with the bearer-auth
-  fix and its database is seeded; every shipped client currently fails to log in there.
 - iOS is built unsigned; publishing needs a signing identity and App Store Connect access.
 
 ## Known Issues
 - Deployment on the production server must always pass explicit `-f` and `--project-directory`
   to docker compose, otherwise it picks up the wrong stack in the parent directory.
+- The repository is now **public**, so these published defaults are readable by anyone:
+  - `backend/scripts/seed.py` hard-codes weak seed passwords (`admin123`, `seller{i}123`,
+    `acct{i}123`, `wh{i}123`, `ship{i}123`). Production must never be seeded with these.
+  - `docker-compose.prod.yml` and `deploy-simple.sh` carry a literal
+    `super-secret-jwt-key-change-in-production` fallback for `JWT_SECRET`; deploying with the
+    fallback (instead of an injected value) would publish a signing key in a public repo.
+- Verified as **not** leaked by going public: the live `JWT_SECRET` inside the `b2b_backend`
+  container is neither that literal nor its published `$(date +%s)` recipe (43 characters, and it
+  does not match the recipe prefix), and no 48+ hex string has ever been committed
+  (`git rev-list --objects --all` scan returned zero candidates). `_unified/` and `.env` stay
+  untracked.
 
 ## Next Steps
-1. Redeploy the backend and seed production (operator decision).
-2. Tag a release and attach the CI artifacts, or wire a publish job.
-3. Add Windows code signing once a certificate exists.
-4. Decide the auto-update channel for the desktop app.
+1. Rotate/replace the seed password defaults before any production seed (operator decision).
+2. Replace the `JWT_SECRET` fallback in `docker-compose.prod.yml` with a fail-fast
+   `${JWT_SECRET:?}` so the public default can never be used.
+3. Redeploy the backend with `5370712` and seed production (operator decision) — until then the
+   released clients cannot log in at `visitor.absadeghi.ir`.
+4. Add Windows code signing once a certificate exists.
+5. Decide the auto-update channel for the desktop app.
