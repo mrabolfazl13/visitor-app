@@ -122,8 +122,19 @@ function humanizeValidation(msg: string): string {
   return msg;
 }
 
+const AUTH_DETAILS: Record<string, string> = {
+  'Incorrect email or password': 'ایمیل یا رمز عبور اشتباه است',
+  'User not found or inactive': 'حساب کاربری پیدا نشد یا غیرفعال است',
+};
+
+const SESSION_EXPIRED = 'نشست شما پایان یافته است. دوباره وارد شوید.';
+const UNREACHABLE = 'اتصال به سرور برقرار نشد. اینترنت و «تنظیمات آدرس سرور» را بررسی کنید.';
+
 function messageFor(status: number, detail: unknown): string {
-  if (status === 401) return 'نشست شما پایان یافته است. دوباره وارد شوید.';
+  if (status === 401) {
+    if (typeof detail === 'string' && AUTH_DETAILS[detail]) return AUTH_DETAILS[detail];
+    return SESSION_EXPIRED;
+  }
   if (status === 403) return 'مجوز انجام این کار را ندارید.';
   if (status === 404) return 'مورد مورد نظر یافت نشد.';
   if (status === 409) return typeof detail === 'string' ? detail : 'این رکورد قبلاً ثبت شده است.';
@@ -193,7 +204,11 @@ export async function request<T>(method: string, path: string, options: RequestO
     const headers: [string, string][] = [['Accept', 'application/json']];
     if (body !== undefined) headers.push(['Content-Type', 'application/json']);
     if (auth && accessToken) headers.push(['Authorization', `Bearer ${accessToken}`]);
-    return send(url, method, headers, body === undefined ? null : JSON.stringify(body), timeoutMs);
+    try {
+      return await send(url, method, headers, body === undefined ? null : JSON.stringify(body), timeoutMs);
+    } catch {
+      throw new ApiError(0, null, UNREACHABLE);
+    }
   };
 
   let result = await execute();
