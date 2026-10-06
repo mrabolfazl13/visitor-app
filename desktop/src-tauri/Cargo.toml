@@ -1,6 +1,6 @@
 [package]
 name = "b2b-sales-desktop"
-version = "1.0.0"
+version = "0.1.0"
 description = "B2B Sales Platform Desktop Application"
 authors = ["B2B Team"]
 edition = "2021"
