@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -71,6 +72,14 @@ export function Card({ title, actions, children, className = '' }: { title?: str
 }
 
 export function Modal({ title, onClose, children, width = 'md' }: { title: string; onClose: () => void; children: ReactNode; width?: 'md' | 'lg' }) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
     <div className="modal-overlay" onMouseDown={onClose} role="presentation">
       <div
